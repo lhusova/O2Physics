@@ -148,7 +148,7 @@ struct cascadeBuilder {
 
   // generate and fill extra QA histograms if requested
   Configurable<bool> d_doQA{"d_doQA", false, "Do basic QA"};
-  Configurable<bool> d_doQA_beforeSelection{"d_doQA_beforeSelection",false,"Do basic QA before applying cuts"};
+  Configurable<bool> d_doQA_beforeSelection{"d_doQA_beforeSelection", false, "Do basic QA before applying cuts"};
   Configurable<int> dQANBinsRadius{"dQANBinsRadius", 500, "Number of radius bins in QA histo"};
   Configurable<int> dQANBinsPtCoarse{"dQANBinsPtCoarse", 10, "Number of pT bins in QA histo"};
   Configurable<int> dQANBinsMass{"dQANBinsMass", 400, "Number of mass bins for QA histograms"};
@@ -780,7 +780,7 @@ struct cascadeBuilder {
     // Overall cascade charge
     cascadecandidate.charge = bachTrack.signed1Pt() > 0 ? +1 : -1;
 
-    if(d_doQA_beforeSelection){
+    if (d_doQA_beforeSelection) {
       auto lPt = RecoDecay::sqrtSumOfSquares(v0.pxpos() + v0.pxneg() + cascadecandidate.bachP[0], v0.pypos() + v0.pyneg() + cascadecandidate.bachP[1]);
 
       cascadecandidate.mXi = RecoDecay::m(array{array{cascadecandidate.bachP[0], cascadecandidate.bachP[1], cascadecandidate.bachP[2]}, array{v0.pxpos() + v0.pxneg(), v0.pypos() + v0.pyneg(), v0.pzpos() + v0.pzneg()}}, array{o2::constants::physics::MassPionCharged, o2::constants::physics::MassLambda});
@@ -795,12 +795,12 @@ struct cascadeBuilder {
       if (cascadecandidate.charge > 0)
         registry.fill(HIST("h2dOmegaPlusMass_Before"), lPt, cascadecandidate.mOmega);
 
-        cascadecandidate.cosPA = RecoDecay::cpa(
-          array{collision.posX(), collision.posY(), collision.posZ()},
-          array{cascadecandidate.pos[0], cascadecandidate.pos[1], cascadecandidate.pos[2]},
-          array{v0.pxpos() + v0.pxneg() + cascadecandidate.bachP[0], v0.pypos() + v0.pyneg() + cascadecandidate.bachP[1], v0.pzpos() + v0.pzneg() + cascadecandidate.bachP[2]});
+      cascadecandidate.cosPA = RecoDecay::cpa(
+        array{collision.posX(), collision.posY(), collision.posZ()},
+        array{cascadecandidate.pos[0], cascadecandidate.pos[1], cascadecandidate.pos[2]},
+        array{v0.pxpos() + v0.pxneg() + cascadecandidate.bachP[0], v0.pypos() + v0.pyneg() + cascadecandidate.bachP[1], v0.pzpos() + v0.pzneg() + cascadecandidate.bachP[2]});
 
-        registry.fill(HIST("h2dTopoVarCascPointingAngle_Before"), lPt, TMath::ACos(cascadecandidate.cosPA));
+      registry.fill(HIST("h2dTopoVarCascPointingAngle_Before"), lPt, TMath::ACos(cascadecandidate.cosPA));
     }
 
     // check also against charge
