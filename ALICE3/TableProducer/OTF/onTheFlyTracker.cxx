@@ -195,8 +195,10 @@ struct OnTheFlyTracker {
   o2::fastsim::FastTracker fastPrimaryTracker;
 
   // V0 names for filling histograms
-  static constexpr std::string_view kV0names[] = {"K0", "Lambda", "AntiLambda"};
-  static constexpr std::string_view index[] = {"0", "1", "2", "3"};
+  static constexpr int NtypesV0 = 3;
+  static constexpr std::string_view NameV0s[NtypesV0] = {"K0", "Lambda", "AntiLambda"};
+  static constexpr int NtypesDetectors = 4;
+  static constexpr std::string_view NameDetectors[NtypesDetectors] = {"0", "1", "2", "3"};
 
   // Class to hold the track information for the O2 vertexing
   class TrackAlice3 : public o2::track::TrackParCov
@@ -817,13 +819,12 @@ struct OnTheFlyTracker {
       }
       if (v0DecaySettings.doV0QA && isV0) {
         static_for<0, 11>([&](auto i) {
-          constexpr int Index = i.value / 4;
-          constexpr int IndexCnfg = i.value % 4;
-          if (pdg == v0PDGs[Index] && icfg == IndexCnfg) {
-
-            histos.fill(HIST("V0Building_Configuration_") + HIST(index[IndexCnfg]) + HIST("/") + HIST(kV0names[Index]) + HIST("/hGen"), v0DecayRadius2D, mcParticle.pt());
-            histos.fill(HIST("V0Building_Configuration_") + HIST(index[IndexCnfg]) + HIST("/") + HIST(kV0names[Index]) + HIST("/hGenNegDaughterFromV0"), v0DecayRadius2D, v0DecayProducts[0].Pt());
-            histos.fill(HIST("V0Building_Configuration_") + HIST(index[IndexCnfg]) + HIST("/") + HIST(kV0names[Index]) + HIST("/hGenPosDaughterFromV0"), v0DecayRadius2D, v0DecayProducts[1].Pt());
+          constexpr int IndexV0 = i.value / NtypesV0;
+          constexpr int IndexDetector = i.value % NtypesDetectors;
+          if (pdg == v0PDGs[IndexV0] && icfg == IndexDetector) {
+            histos.fill(HIST("V0Building_Configuration_") + HIST(NameDetectors[IndexDetector]) + HIST("/") + HIST(NameV0s[IndexV0]) + HIST("/hGen"), v0DecayRadius2D, mcParticle.pt());
+            histos.fill(HIST("V0Building_Configuration_") + HIST(NameDetectors[IndexDetector]) + HIST("/") + HIST(NameV0s[IndexV0]) + HIST("/hGenNegDaughterFromV0"), v0DecayRadius2D, v0DecayProducts[0].Pt());
+            histos.fill(HIST("V0Building_Configuration_") + HIST(NameDetectors[IndexDetector]) + HIST("/") + HIST(NameV0s[IndexV0]) + HIST("/hGenPosDaughterFromV0"), v0DecayRadius2D, v0DecayProducts[1].Pt());
           }
         });
       }
@@ -1117,9 +1118,9 @@ struct OnTheFlyTracker {
       if (v0DecaySettings.decayV0 && isV0) {
         if (v0DecaySettings.doV0QA) {
           static_for<0, 3>([&](auto j) {
-            constexpr int IndexCnfg = j.value;
-            if (icfg == IndexCnfg) {
-              histos.fill(HIST("V0Building_Configuration_") + HIST(index[IndexCnfg]) + HIST("/hV0Building"), 0.0f);
+            constexpr int IndexDetector = j.value;
+            if (icfg == IndexDetector) {
+              histos.fill(HIST("V0Building_Configuration_") + HIST(NameDetectors[IndexDetector]) + HIST("/hV0Building"), 0.0f);
             }
           });
         }
@@ -1145,9 +1146,9 @@ struct OnTheFlyTracker {
 
             if (nV0Hits[i] < 0) { // QA
               static_for<0, 3>([&](auto j) {
-                constexpr int IndexCnfg = j.value;
-                if (icfg == IndexCnfg) {
-                  histos.fill(HIST("V0Building_Configuration_") + HIST(index[IndexCnfg]) + HIST("/hFastTrackerQA"), o2::math_utils::abs(nV0Hits[i]));
+                constexpr int IndexDetector = j.value;
+                if (icfg == IndexDetector) {
+                  histos.fill(HIST("V0Building_Configuration_") + HIST(NameDetectors[IndexDetector]) + HIST("/hFastTrackerQA"), o2::math_utils::abs(nV0Hits[i]));
                 }
               });
             }
@@ -1159,9 +1160,9 @@ struct OnTheFlyTracker {
             }
             for (uint32_t ih = 0; ih < fastTracker[icfg]->GetNHits(); ih++) {
               static_for<0, 3>([&](auto j) {
-                constexpr int IndexCnfg = j.value;
-                if (icfg == IndexCnfg) {
-                  histos.fill(HIST("V0Building_Configuration_") + HIST(index[IndexCnfg]) + HIST("/hFastTrackerHits"), fastTracker[icfg]->GetHitZ(ih), std::hypot(fastTracker[icfg]->GetHitX(ih), fastTracker[icfg]->GetHitY(ih)));
+                constexpr int IndexDetector = j.value;
+                if (icfg == IndexDetector) {
+                  histos.fill(HIST("V0Building_Configuration_") + HIST(NameDetectors[IndexDetector]) + HIST("/hFastTrackerHits"), fastTracker[icfg]->GetHitZ(ih), std::hypot(fastTracker[icfg]->GetHitX(ih), fastTracker[icfg]->GetHitY(ih)));
                 }
               });
             }
@@ -1182,18 +1183,18 @@ struct OnTheFlyTracker {
           }
         }
         if (v0DecaySettings.doV0QA) {
-          static_for<0, 11>([&](auto i) {
-            constexpr int Index = i.value / 4;
-            constexpr int IndexCnfg = i.value % 4;
-            if (pdg == v0PDGs[Index] && icfg == IndexCnfg) {
+          static_for<0, IndexV0 * IndexDetector - 1>([&](auto i) {
+            constexpr int IndexV0 = i.value / NtypesV0;
+            constexpr int IndexDetector = i.value % NtypesDetectors;
+            if (pdg == v0PDGs[IndexV0] && icfg == IndexDetector) {
               if (isReco[0] && isReco[1]) {
-                histos.fill(HIST("V0Building_Configuration_") + HIST(index[IndexCnfg]) + HIST("/hV0Building"), 1.0f);
-                histos.fill(HIST("V0Building_Configuration_") + HIST(index[IndexCnfg]) + HIST("/") + HIST(kV0names[Index]) + HIST("/hReco"), v0DecayRadius2D, mcParticle.pt());
+                histos.fill(HIST("V0Building_Configuration_") + HIST(NameDetectors[IndexDetector]) + HIST("/hV0Building"), 1.0f);
+                histos.fill(HIST("V0Building_Configuration_") + HIST(NameDetectors[IndexDetector]) + HIST("/") + HIST(NameV0s[IndexV0]) + HIST("/hReco"), v0DecayRadius2D, mcParticle.pt());
               }
               if (isReco[0])
-                histos.fill(HIST("V0Building_Configuration_") + HIST(index[IndexCnfg]) + HIST("/") + HIST(kV0names[Index]) + HIST("/hRecoNegDaughterFromV0"), v0DecayRadius2D, v0DecayProducts[0].Pt());
+                histos.fill(HIST("V0Building_Configuration_") + HIST(NameDetectors[IndexDetector]) + HIST("/") + HIST(NameV0s[IndexV0]) + HIST("/hRecoNegDaughterFromV0"), v0DecayRadius2D, v0DecayProducts[0].Pt());
               if (isReco[1])
-                histos.fill(HIST("V0Building_Configuration_") + HIST(index[IndexCnfg]) + HIST("/") + HIST(kV0names[Index]) + HIST("/hRecoPosDaughterFromV0"), v0DecayRadius2D, v0DecayProducts[1].Pt());
+                histos.fill(HIST("V0Building_Configuration_") + HIST(NameDetectors[IndexDetector]) + HIST("/") + HIST(NameV0s[IndexV0]) + HIST("/hRecoPosDaughterFromV0"), v0DecayRadius2D, v0DecayProducts[1].Pt());
             }
           });
         }
@@ -1203,10 +1204,10 @@ struct OnTheFlyTracker {
         // V0 building starts here
         if (v0DecaySettings.findV0 && isReco[0] && isReco[1]) {
           if (v0DecaySettings.doV0QA) {
-            static_for<0, 3>([&](auto j) {
-              constexpr int IndexCnfg = j.value;
-              if (icfg == IndexCnfg) {
-                histos.fill(HIST("V0Building_Configuration_") + HIST(index[IndexCnfg]) + HIST("/hV0Building"), 2.0f);
+            static_for<0, NtypesDetectors>([&](auto j) {
+              constexpr int IndexDetector = j.value;
+              if (icfg == IndexDetector) {
+                histos.fill(HIST("V0Building_Configuration_") + HIST(NameDetectors[IndexDetector]) + HIST("/hV0Building"), 2.0f);
               }
             });
           }
@@ -1232,10 +1233,10 @@ struct OnTheFlyTracker {
           // V0 found successfully
           if (dcaFitterOK_V0) {
             if (v0DecaySettings.doV0QA) {
-              static_for<0, 3>([&](auto j) {
-                constexpr int IndexCnfg = j.value;
-                if (icfg == IndexCnfg) {
-                  histos.fill(HIST("V0Building_Configuration_") + HIST(index[IndexCnfg]) + HIST("/hV0Building"), 3.0f);
+              static_for<0, NtypesDetectors - 1>([&](auto j) {
+                constexpr int IndexDetector = j.value;
+                if (icfg == IndexDetector) {
+                  histos.fill(HIST("V0Building_Configuration_") + HIST(NameDetectors[IndexDetector]) + HIST("/hV0Building"), 3.0f);
                 }
               });
             }
@@ -1293,13 +1294,13 @@ struct OnTheFlyTracker {
             }
 
             if (v0DecaySettings.doV0QA) {
-              static_for<0, 3>([&](auto j) {
-                constexpr int IndexCnfg = j.value;
-                if (icfg == IndexCnfg) {
-                  histos.fill(HIST("V0Building_Configuration_") + HIST(index[IndexCnfg]) + HIST("/hV0Building"), 4.0f);
-                  histos.fill(HIST("V0Building_Configuration_") + HIST(index[IndexCnfg]) + HIST("/K0/hMass"), thisV0.mK0, thisV0.pt);
-                  histos.fill(HIST("V0Building_Configuration_") + HIST(index[IndexCnfg]) + HIST("/Lambda/hMass"), thisV0.mLambda, thisV0.pt);
-                  histos.fill(HIST("V0Building_Configuration_") + HIST(index[IndexCnfg]) + HIST("/AntiLambda/hMass"), thisV0.mAntiLambda, thisV0.pt);
+              static_for<0, NtypesDetectors - 1>([&](auto j) {
+                constexpr int IndexDetector = j.value;
+                if (icfg == IndexDetector) {
+                  histos.fill(HIST("V0Building_Configuration_") + HIST(NameDetectors[IndexDetector]) + HIST("/hV0Building"), 4.0f);
+                  histos.fill(HIST("V0Building_Configuration_") + HIST(NameDetectors[IndexDetector]) + HIST("/K0/hMass"), thisV0.mK0, thisV0.pt);
+                  histos.fill(HIST("V0Building_Configuration_") + HIST(NameDetectors[IndexDetector]) + HIST("/Lambda/hMass"), thisV0.mLambda, thisV0.pt);
+                  histos.fill(HIST("V0Building_Configuration_") + HIST(NameDetectors[IndexDetector]) + HIST("/AntiLambda/hMass"), thisV0.mAntiLambda, thisV0.pt);
                 }
               });
             }
